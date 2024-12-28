@@ -1,152 +1,171 @@
-// Elements
-const player = document.getElementById('player');
-const scoreDisplay = document.getElementById('score');
-const gameOverDisplay = document.getElementById('game-over');
-const restartBtn = document.getElementById('restart-btn');
-const gameArea = document.getElementById('game-area');
-const rulesDisplay = document.getElementById('rules');
-const startBtn = document.getElementById('start-btn');
-const tokcoinDisplay = document.getElementById('tokcoin');
-
-// Variables
-let score = 0;
-let playerPosition = 125; // Initial player position
-let tokcoins = 5; // Starting TokCoins
-const playerWidth = 50;
-const gameAreaWidth = 300;
-const gameAreaHeight = 500;
-const itemWidth = 30;
-let gameInterval;
-let isGameOver = false;
-let items = []; // Array to store falling items
-let spawnRate = 1000; // Start with 1 second between items
-let speedIncreaseThresholds = [100, 1000, 2000]; // Thresholds for speed increase
-
-// Start Game
-function startGame() {
-    if (tokcoins <= 0) {
-        alert("You don't have any TokCoins left! You cannot play.");
-        return;
-    }
-
-    tokcoins--; // Deduct 1 TokCoin each time the game starts
-    tokcoinDisplay.textContent = `TokCoins: ${tokcoins}`;
-
-    score = 0;
-    playerPosition = 125;
-    isGameOver = false;
-    items = [];
-    scoreDisplay.textContent = `Score: ${score}`;
-    gameOverDisplay.style.display = 'none';
-    player.style.left = `${playerPosition}px`;
-
-    gameInterval = setInterval(spawnItem, spawnRate); // Spawn items every 1 second initially
-    rulesDisplay.style.display = 'none'; // Hide rules when game starts
+// Check if the user is logged in, if not, redirect to login page
+if (!localStorage.getItem('loggedIn') || localStorage.getItem('loggedIn') === 'false') {
+  window.location.href = 'login.html';
 }
 
-// End Game
-function endGame(message) {
-    clearInterval(gameInterval);
-    items.forEach((item) => {
-        if (gameArea.contains(item)) {
-            gameArea.removeChild(item);
-        }
-    });
-    items = []; // Clear all items
-    isGameOver = true;
-    gameOverDisplay.style.display = 'block';
-}
+let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+let spins = currentUser.spins;
+let points = currentUser.points;
+let day = localStorage.getItem('day') || 1;
+let rewardClaimed = localStorage.getItem('rewardClaimed') === 'true';
 
-// Restart Game
-restartBtn.addEventListener('click', () => {
-    startGame();
+// Display the current user’s creator code
+document.getElementById('creator-code').textContent = `Your Creator Code: ${currentUser.creatorCode}`;
+
+// Update UI with spins and points
+document.getElementById('spin-count').textContent = spins;
+document.getElementById('points-count').textContent = points;
+
+// Login functionality
+document.getElementById('login-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  let users = JSON.parse(localStorage.getItem('users')) || [];
+
+  const user = users.find(user => user.username === username && user.password === password);
+
+  if (user) {
+    localStorage.setItem('loggedIn', true);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    window.location.href = 'game.html';
+  } else {
+    alert('Invalid username or password');
+  }
 });
 
-// Start Button Click (from Rules Display)
-startBtn.addEventListener('click', () => {
-    startGame();
+// Redirect to signup page
+document.getElementById('signup-btn').addEventListener('click', function() {
+  window.location.href = 'signup.html';
 });
 
-// Spawn an Item
-function spawnItem() {
-    if (isGameOver) return;
-
-    const item = document.createElement('div');
-    const isBadItem = Math.random() < 0.2; // 20% chance of spawning a bad item
-    const isSpecialBadItem = Math.random() < 0.1; // 10% chance of spawning a new, harder bad item
-
-    item.classList.add('item');
-    item.style.left = `${Math.random() * (gameAreaWidth - itemWidth)}px`;
-    item.style.top = '0px';
-    item.style.backgroundColor = isBadItem ? (isSpecialBadItem ? 'black' : 'gray') : 'gold'; // Black is a harder bad item
-    item.dataset.bad = isBadItem; // Flag bad items
-    gameArea.appendChild(item);
-    items.push(item);
-
-    moveItem(item);
-
-    // Increase the speed as the score increases
-    if (score >= speedIncreaseThresholds[0]) {
-        spawnRate = 800; // Increase speed when score reaches 100
-    }
-    if (score >= speedIncreaseThresholds[1]) {
-        spawnRate = 600; // Increase speed when score reaches 1000
-    }
-    if (score >= speedIncreaseThresholds[2]) {
-        spawnRate = 400; // Increase speed when score reaches 2000
-    }
-    clearInterval(gameInterval);
-    gameInterval = setInterval(spawnItem, spawnRate); // Restart interval with new spawn rate
+// Generate random creator code
+function generateCreatorCode() {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
 }
 
-// Move Item
-function moveItem(item) {
-    const itemInterval = setInterval(() => {
-        if (isGameOver) {
-            clearInterval(itemInterval);
-            return;
-        }
+// Signup functionality
+document.getElementById('signup-form').addEventListener('submit', function(e) {
+  e.preventDefault();
 
-        const itemTop = parseInt(window.getComputedStyle(item).top) || 0;
-        const itemLeft = parseInt(window.getComputedStyle(item).left);
+  const username = document.getElementById('new-username').value;
+  const password = document.getElementById('new-password').value;
 
-        // If the item reaches the bottom of the game area
-        if (itemTop >= gameAreaHeight - 50) {
-            // Check collision with player
-            if (itemLeft > playerPosition && itemLeft < playerPosition + playerWidth) {
-                if (item.dataset.bad === 'true') {
-                    // Player collected a bad item
-                    clearInterval(itemInterval);
-                    gameArea.removeChild(item);
-                    endGame('You caught a bad item!');
-                } else {
-                    // Player collected a gift
-                    score++;
-                    scoreDisplay.textContent = `Score: ${score}`;
-                    clearInterval(itemInterval);
-                    gameArea.removeChild(item);
-                }
-            } else {
-                clearInterval(itemInterval);
-                gameArea.removeChild(item);
-            }
-        } else {
-            item.style.top = `${itemTop + 5}px`;
-        }
-    }, 50); // Move items every 50ms
-}
+  let users = JSON.parse(localStorage.getItem('users')) || [];
 
-// Player Movement
-document.addEventListener('keydown', (e) => {
-    if (isGameOver) return;
+  if (users.some(user => user.username === username)) {
+    alert('Username already exists');
+    return;
+  }
 
-    if (e.key === 'ArrowLeft' && playerPosition > 0) {
-        playerPosition -= 10;
-        player.style.left = `${playerPosition}px`;
-    }
-    if (e.key === 'ArrowRight' && playerPosition < gameAreaWidth - playerWidth) {
-        playerPosition += 10;
-        player.style.left = `${playerPosition}px`;
-    }
+  const newUser = { 
+    username, 
+    password, 
+    points: 0, 
+    spins: 10, 
+    creatorCode: generateCreatorCode() // Assign a random creator code to the new user
+  };
+  users.push(newUser);
+  localStorage.setItem('users', JSON.stringify(users));
+
+  alert('Account created successfully! You can now login.');
+  window.location.href = 'login.html';
 });
 
+// Redirect to login page
+document.getElementById('login-btn').addEventListener('click', function() {
+  window.location.href = 'login.html';
+});
+
+// Spin the slots
+function spin() {
+  if (spins <= 0) {
+    alert("No spins left. Please claim your daily reward.");
+    return;
+  }
+
+  spins--;
+  currentUser.spins = spins;
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  const slot1 = document.getElementById('slot1');
+  const slot2 = document.getElementById('slot2');
+  const slot3 = document.getElementById('slot3');
+
+  // Generate random numbers for the slots
+  const result1 = Math.floor(Math.random() * 10);
+  const result2 = Math.floor(Math.random() * 10);
+  const result3 = Math.floor(Math.random() * 10);
+
+  slot1.textContent = result1;
+  slot2.textContent = result2;
+  slot3.textContent = result3;
+
+  // Check for matching slots
+  if (result1 === result2 && result2 === result3) {
+    points += 10;
+    alert("You won! 10 points earned.");
+  }
+
+  currentUser.points = points;
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  document.getElementById('spin-count').textContent = spins;
+  document.getElementById('points-count').textContent = points;
+}
+
+// Claim daily reward and add spins
+function claimDailyReward() {
+  if (rewardClaimed) {
+    alert("You have already claimed your reward for today.");
+    return;
+  }
+
+  spins += 30; // Adding 30 spins for daily reward
+  rewardClaimed = true;
+  localStorage.setItem('rewardClaimed', true);
+  localStorage.setItem('day', ++day); // Increment the day
+  localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+  alert(`You've claimed your daily reward! You now have ${spins} spins.`);
+  document.getElementById('spin-count').textContent = spins;
+}
+
+// Auto spin feature (Optional)
+function startAutoSpin() {
+  if (spins <= 0) {
+    alert("No spins left. Please claim your daily reward.");
+    return;
+  }
+
+  let interval = setInterval(function() {
+    if (spins <= 0) {
+      clearInterval(interval);
+      alert("No more spins left.");
+    } else {
+      spin();
+    }
+  }, 2000);
+}
+
+// Share creator code and earn spins
+function shareCreatorCode(creatorCode) {
+  // Simulate sharing the creator code with another player
+  let users = JSON.parse(localStorage.getItem('users')) || [];
+
+  const user = users.find(u => u.creatorCode === creatorCode);
+
+  if (user) {
+    user.spins += 100; // Reward the user who shared their code
+    localStorage.setItem('users', JSON.stringify(users));
+    alert("You've earned 100 spins by using the creator code!");
+  } else {
+    alert("Invalid creator code.");
+  }
+}
