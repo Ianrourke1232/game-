@@ -1,44 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Christmas Catch Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slot Game</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>🎄 Christmas Catch Game 🎄</h1>
+  <div class="container">
+    <h1>Welcome to Slot Game</h1>
 
-    <!-- Game Area -->
-    <div id="game-area">
-        <div id="player"></div>
+    <!-- Displaying user info -->
+    <div class="user-info">
+      <p id="creator-code"></p>
+      <p id="spin-count">Spins: 10</p>
+      <p id="points-count">Points: 0</p>
     </div>
 
-    <!-- Score Display -->
-    <div id="score">Score: 0</div>
-
-    <!-- TokCoin Display -->
-    <div id="tokcoin">TokCoins: 5</div>
-
-    <!-- Game Over Display -->
-    <div id="game-over" style="display: none;">
-        <p>Game Over! 🎅 You caught a bad item!</p>
-        <button id="restart-btn">Restart</button>
+    <!-- Slot Machine -->
+    <div class="slot-machine">
+      <div id="slot1" class="slot">0</div>
+      <div id="slot2" class="slot">0</div>
+      <div id="slot3" class="slot">0</div>
     </div>
 
-    <!-- Rules Display -->
-    <div id="rules">
-        <h2>🎄 Christmas Catch Game Rules 🎄</h2>
-        <ul>
-            <li>Use the left and right arrow keys to move your character.</li>
-            <li>Catch the gifts (gold items) to score points.</li>
-            <li>Don't catch the bad items (gray, black items), or you will lose the game.</li>
-            <li>The game ends if you catch a bad item!</li>
-        </ul>
-        <button id="start-btn">Start Game</button>
+    <!-- Spin and Daily Reward Buttons -->
+    <div class="controls">
+      <button onclick="spin()">Spin</button>
+      <button onclick="claimDailyReward()">Claim Daily Reward</button>
+      <button onclick="startAutoSpin()">Start Auto Spin</button>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Login/Signup Links -->
+    <div class="auth">
+      <button id="signup-btn">Sign Up</button>
+      <button id="login-btn">Login</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
-
